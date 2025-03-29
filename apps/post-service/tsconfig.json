@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "target": "ES2020",                   // 出力されるJSのターゲットバージョン
+      "module": "CommonJS",                 // Node.js の標準モジュールシステム
+      "outDir": "dist",                     // コンパイル後の出力先
+      "rootDir": "src",                     // ソースコードのルートディレクトリ
+      "strict": true,                       // 厳格な型チェック
+      "esModuleInterop": true,              // ES6 形式の import を許可
+      "skipLibCheck": true,                 // node_modules の型チェックをスキップ
+      "forceConsistentCasingInFileNames": true // 大文字小文字のブレ防止（Linux/Mac向け）
+    },
+    "include": ["src"],
+    "exclude": ["node_modules", "dist"]
+  }  

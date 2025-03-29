@@ -43,10 +43,40 @@ services:
     ports: 
      - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql 
+      - mysql_data:/var/lib/mysql
+
+  post-service:
+    build:
+      context: ./apps/post-service
+      dockerfile: local.Dockerfile
+    container_name: post-service
+    volumes:
+      - ./apps/post-service:/app
+      - /app/node_modules  # node_modulesのキャッシュを防ぐ
+    ports:
+      - "4000:3000"
+    environment:
+      - DATABASE_URL=postgresql://admin:password@postgres:5432/post
+    depends_on:
+      - postgres
+    command: npm run dev
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: post
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   # mongodb:
   #   image: mongo
 
 volumes:
-  mysql_data:  
+  mysql_data:
+  postgres_data:
