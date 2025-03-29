@@ -1,2 +1,2 @@
 test:
-	PYTHONPATH=. poetry run pytest --cov=app tests/
+	PYTHONPATH=. poetry run pytest -v tests
