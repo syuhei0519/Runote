@@ -1,2 +1,8 @@
 __pycache__/
 *.py[cod]
+# SQLite テスト用 DB
+test.db
+*.sqlite3
+# coverage
+.coverage
+htmlcov/
