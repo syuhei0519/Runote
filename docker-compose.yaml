@@ -1,0 +1,41 @@
+services:
+  auth-service:
+    build: 
+      context: ./apps/auth_service
+      dockerfile: local.Dockerfile
+    volumes:
+      - ./apps/auth_service:/app  
+    ports:
+      - 8000:8000
+    env_file:
+      - .env.dev
+    depends_on:
+      - mysql
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+  
+
+  # post-service:
+  #   build: ./services/post-service
+  #   ports:
+  #     - 3001:3000
+  #   env_file:
+  #     - .env.dev
+  #   depends_on:
+  #     - mongodb
+
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - 3000:3000
+  #   env_file:
+  #     - .env.dev
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: auth
+      MYSQL_ROOT_PASSWORD: password
+
+  # mongodb:
+  #   image: mongo
