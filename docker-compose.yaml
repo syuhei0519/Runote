@@ -33,9 +33,20 @@ services:
 
   mysql:
     image: mysql:8
+    container_name: mysql
+    restart: always
     environment:
-      MYSQL_DATABASE: auth
       MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: auth
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+    ports: 
+     - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql 
 
   # mongodb:
   #   image: mongo
+
+volumes:
+  mysql_data:  
