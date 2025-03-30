@@ -73,6 +73,27 @@ services:
       - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  
+  emotion-service:
+    build:
+      context: ./apps/emotion-service
+      dockerfile: local.Dockerfile
+    container_name: emotion-service
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./apps/emotion-service:/app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379" 
 
   # mongodb:
   #   image: mongo
