@@ -8,6 +8,7 @@ datasource db {
 }
 
 model Post {
+　@@map("post")  // 👈 DB上のテーブル名を小文字に指定
   id        Int      @id @default(autoincrement())
   title     String
   content   String
