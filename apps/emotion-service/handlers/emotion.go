@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"context"
     "log"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/syuhei0519/Runote/apps/emotion-service/redis"
@@ -44,5 +45,26 @@ func RegisterEmotion(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Emotion logged",
 		"data":    emotion,
+	})
+}
+
+func GetEmotion(c *gin.Context) {
+	postID := c.Param("post_id")
+	userID := c.Param("user_id")
+
+	key := fmt.Sprintf("emotion:%s:%s", postID, userID)
+
+	val, err := redis.Client.Get(redis.Ctx, key).Result()
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Emotion not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"post_id": postID,
+		"user_id": userID,
+		"emotion": val,
 	})
 }

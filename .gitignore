@@ -7,3 +7,4 @@ test.db
 .coverage
 htmlcov/
 test.env
+!test.env.example

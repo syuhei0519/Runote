@@ -9,17 +9,29 @@ import (
 
 var Client *redis.Client
 var Ctx = context.Background()
-var Rdb *redis.Client
 
 func InitRedis() {
-    Client = redis.NewClient(&redis.Options{
-        Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
-        Password: "",
-        DB:       0,
-    })
+	url := os.Getenv("REDIS_URL")
+	if url == "" {
+		log.Fatal("❌ REDIS_URL が設定されていません")
+	}
+	log.Println("url =", url)
 
-    _, err := Client.Ping(Ctx).Result()
-    if err != nil {
-        log.Fatalf("Redis connection failed: %v", err)
-    }
+	opt, err := redis.ParseURL(url)
+	if err != nil {
+		log.Fatalf("❌ REDIS_URL のパースに失敗しました: %v", err)
+	}
+	log.Printf("🔧 パース後の redis.Options: Addr=%s, DB=%d\n", opt.Addr, opt.DB)
+
+	Client = redis.NewClient(opt)
+
+	if _, err := Client.Ping(Ctx).Result(); err != nil {
+		log.Fatalf("❌ Redis に接続できません: %v", err)
+	}
+
+	log.Println("✅ Redis に接続しました")
+}
+
+func FlushAll() {
+    Client.FlushDB(context.Background())
 }

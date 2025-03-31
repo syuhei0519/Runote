@@ -2,6 +2,7 @@ package main
 
 import (
     "log"
+	"os"
 
     "github.com/gin-gonic/gin"
     "github.com/joho/godotenv"
@@ -11,17 +12,24 @@ import (
 )
 
 func main() {
-    // dev.env を読み込み（必要に応じて切り替え）
-    err := godotenv.Load("dev.env")
-    if err != nil {
-        log.Println("dev.env が見つかりませんでした（スキップ）")
+    env := os.Getenv("ENV")
+    envFile := "dev.env"
+    if env == "test" {
+        envFile = "test.env"
+    }
+
+    if err := godotenv.Load(envFile); err != nil {
+        log.Printf("%s が見つかりませんでした（スキップ）\n", envFile)
     }
 
     // Redis 初期化
+	log.Println("🔁 Redis 接続開始")
     redis.InitRedis()
+	log.Println("✅ Redis 接続完了")
 
     // Gin のルーティング設定
     r := gin.Default()
+    r.GET("/emotions/:post_id/:user_id", handlers.GetEmotion)
     r.POST("/emotions", handlers.RegisterEmotion)
 
     log.Println("Starting server on :8080")
