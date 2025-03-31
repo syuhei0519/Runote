@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -55,4 +56,32 @@ func TestRegisterEmotion(t *testing.T) {
 // 今後の GET / PUT / DELETE に備えて、helper も追加しておく
 func clearEmotionKey(postID, userID string) {
 	_ = redis.Client.Del(context.Background(), redisKey(postID, userID)).Err()
+}
+
+func TestGetEmotion(t *testing.T) {
+	Setup(t) // test.env読み込みとRedis初期化
+
+	// テスト用データ
+	postID := "testPost123"
+	userID := "testUser456"
+	emotion := "やった！"
+
+	// Redis に事前に保存
+	key := fmt.Sprintf("emotion:%s:%s", postID, userID)
+	err := redis.Client.Set(redis.Ctx, key, emotion, 0).Err()
+	assert.NoError(t, err, "Redisへの保存でエラー")
+
+	// Gin のルーターセットアップ
+	r := gin.Default()
+	r.GET("/emotions/:post_id/:user_id", handlers.GetEmotion)
+
+	// リクエスト送信
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/emotions/%s/%s", postID, userID), nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// 検証
+	assert.Equal(t, http.StatusOK, w.Code)
+	expected := fmt.Sprintf(`{"emotion":"%s","post_id":"%s","user_id":"%s"}`, emotion, postID, userID)
+	assert.JSONEq(t, expected, w.Body.String())
 }
