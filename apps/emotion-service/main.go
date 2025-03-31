@@ -30,6 +30,7 @@ func main() {
     // Gin のルーティング設定
     r := gin.Default()
     r.GET("/emotions/:post_id/:user_id", handlers.GetEmotion)
+    r.PUT("/emotions/:post_id/:user_id", handlers.UpdateEmotion)
     r.POST("/emotions", handlers.RegisterEmotion)
 
     log.Println("Starting server on :8080")

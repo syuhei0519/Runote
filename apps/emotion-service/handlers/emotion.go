@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/syuhei0519/Runote/apps/emotion-service/redis"
+	goredis "github.com/redis/go-redis/v9"
 )
 
 type Emotion struct {
@@ -66,5 +67,48 @@ func GetEmotion(c *gin.Context) {
 		"post_id": postID,
 		"user_id": userID,
 		"emotion": val,
+	})
+}
+
+func UpdateEmotion(c *gin.Context) {
+	postID := c.Param("post_id")
+	userID := c.Param("user_id")
+	key := fmt.Sprintf("emotion:%s:%s", postID, userID)
+
+	var req struct {
+		Emotion string `json:"emotion"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil || req.Emotion == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	// すでに存在するか確認（存在しないなら 404）
+	val, err := redis.Client.Get(redis.Ctx, key).Result()
+	if err == goredis.Nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Emotion not found"})
+		return
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Redis error"})
+		return
+	}
+
+	log.Printf("🔄 旧: %s → 新: %s", val, req.Emotion)
+
+	// 更新
+	err = redis.Client.Set(redis.Ctx, key, req.Emotion, 0).Err()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update emotion"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Emotion updated",
+		"data": gin.H{
+			"post_id": postID,
+			"user_id": userID,
+			"emotion": req.Emotion,
+		},
 	})
 }

@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"encoding/json"
 )
 
 // テスト用のRedisキー生成ヘルパー
@@ -24,6 +25,7 @@ func setupRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.Default()
 	r.GET("/emotions/:post_id/:user_id", handlers.GetEmotion)
+	r.PUT("/emotions/:post_id/:user_id", handlers.UpdateEmotion)
 	r.POST("/emotions", handlers.RegisterEmotion)
 	return r
 }
@@ -84,4 +86,46 @@ func TestGetEmotion(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	expected := fmt.Sprintf(`{"emotion":"%s","post_id":"%s","user_id":"%s"}`, emotion, postID, userID)
 	assert.JSONEq(t, expected, w.Body.String())
+}
+
+func TestUpdateEmotion(t *testing.T) {
+    Setup(t) // test.env 読み込み & Redis 初期化
+
+    postID := "testPost123"
+    userID := "testUser456"
+    originalEmotion := "楽しい"
+    updatedEmotion := "イライラ"
+    key := fmt.Sprintf("emotion:%s:%s", postID, userID)
+
+    // 事前登録
+    err := redis.Client.Set(redis.Ctx, key, originalEmotion, 0).Err()
+    if err != nil {
+        t.Fatalf("Redis 初期登録失敗: %v", err)
+    }
+
+    // 更新リクエスト送信
+    w := httptest.NewRecorder()
+    c, _ := gin.CreateTestContext(w)
+    c.Params = []gin.Param{
+        {Key: "post_id", Value: postID},
+        {Key: "user_id", Value: userID},
+    }
+    c.Request = httptest.NewRequest("PUT", "/emotions/"+postID+"/"+userID, strings.NewReader(`{"emotion":"イライラ"}`))
+    c.Request.Header.Set("Content-Type", "application/json")
+
+    handlers.UpdateEmotion(c)
+
+    // 検証
+    assert.Equal(t, http.StatusOK, w.Code)
+
+    var resBody map[string]interface{}
+    json.Unmarshal(w.Body.Bytes(), &resBody)
+
+    assert.Equal(t, "Emotion updated", resBody["message"])
+    data := resBody["data"].(map[string]interface{})
+    assert.Equal(t, updatedEmotion, data["emotion"])
+
+    // Redis 確認
+    saved, _ := redis.Client.Get(redis.Ctx, key).Result()
+    assert.Equal(t, updatedEmotion, saved)
 }
