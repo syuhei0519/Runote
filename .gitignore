@@ -8,3 +8,5 @@ test.db
 htmlcov/
 test.env
 !test.env.example
+# Air 一時ファイル
+tmp/

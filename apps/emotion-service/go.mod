@@ -1,6 +1,6 @@
 module github.com/syuhei0519/Runote/apps/emotion-service
 
-go 1.22
+go 1.23
 
 require (
 	github.com/gin-gonic/gin v1.9.1
