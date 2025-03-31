@@ -32,6 +32,7 @@ func main() {
     r.GET("/emotions/:post_id/:user_id", handlers.GetEmotion)
     r.PUT("/emotions/:post_id/:user_id", handlers.UpdateEmotion)
     r.POST("/emotions", handlers.RegisterEmotion)
+    r.DELETE("/emotions/:post_id/:user_id", handlers.DeleteEmotion)
 
     log.Println("Starting server on :8080")
     r.Run(":8080")

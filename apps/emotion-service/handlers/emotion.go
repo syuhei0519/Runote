@@ -112,3 +112,28 @@ func UpdateEmotion(c *gin.Context) {
 		},
 	})
 }
+
+func DeleteEmotion(c *gin.Context) {
+	postID := c.Param("post_id")
+	userID := c.Param("user_id")
+	key := fmt.Sprintf("emotion:%s:%s", postID, userID)
+
+	// 削除前に存在確認
+	val, err := redis.Client.Get(redis.Ctx, key).Result()
+	if err == goredis.Nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Emotion not found"})
+		return
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Redis error"})
+		return
+	}
+
+	log.Printf("🗑️ 削除対象の感情: %s", val)
+
+	if err := redis.Client.Del(redis.Ctx, key).Err(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete emotion"})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}

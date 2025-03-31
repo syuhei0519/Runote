@@ -14,6 +14,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"encoding/json"
+	goredis "github.com/redis/go-redis/v9"
 )
 
 // テスト用のRedisキー生成ヘルパー
@@ -27,6 +28,8 @@ func setupRouter() *gin.Engine {
 	r.GET("/emotions/:post_id/:user_id", handlers.GetEmotion)
 	r.PUT("/emotions/:post_id/:user_id", handlers.UpdateEmotion)
 	r.POST("/emotions", handlers.RegisterEmotion)
+	r.DELETE("/emotions/:post_id/:user_id", handlers.DeleteEmotion)
+
 	return r
 }
 
@@ -128,4 +131,39 @@ func TestUpdateEmotion(t *testing.T) {
     // Redis 確認
     saved, _ := redis.Client.Get(redis.Ctx, key).Result()
     assert.Equal(t, updatedEmotion, saved)
+}
+
+func TestDeleteEmotion(t *testing.T) {
+	Setup(t)
+
+	postID := "deleteTestPost"
+	userID := "deleteTestUser"
+	emotion := "イライラ"
+
+	key := fmt.Sprintf("emotion:%s:%s", postID, userID)
+	if err := redis.Client.Set(redis.Ctx, key, emotion, 0).Err(); err != nil {
+		t.Fatalf("Redis セットに失敗しました: %v", err)
+	}
+
+	router := gin.Default()
+	router.DELETE("/emotions/:post_id/:user_id", handlers.DeleteEmotion)
+
+	t.Run("DELETE /emotions/:post_id/:user_id - 正常削除", func(t *testing.T) {
+		req := httptest.NewRequest("DELETE", "/emotions/"+postID+"/"+userID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNoContent, w.Code)
+
+		_, err := redis.Client.Get(redis.Ctx, key).Result()
+		assert.Equal(t, goredis.Nil, err)
+	})
+
+	t.Run("DELETE /emotions/:post_id/:user_id - 存在しない感情", func(t *testing.T) {
+		req := httptest.NewRequest("DELETE", "/emotions/none/none", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
 }
