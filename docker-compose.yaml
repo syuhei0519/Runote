@@ -13,23 +13,6 @@ services:
       - mysql
     environment:
       - PYTHONDONTWRITEBYTECODE=1
-  
-
-  # post-service:
-  #   build: ./services/post-service
-  #   ports:
-  #     - 3001:3000
-  #   env_file:
-  #     - .env.dev
-  #   depends_on:
-  #     - mongodb
-
-  # frontend:
-  #   build: ./frontend
-  #   ports:
-  #     - 3000:3000
-  #   env_file:
-  #     - .env.dev
 
   mysql:
     image: mysql:8
