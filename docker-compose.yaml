@@ -79,9 +79,6 @@ services:
     ports:
       - "6379:6379" 
 
-  # mongodb:
-  #   image: mongo
-
 volumes:
   mysql_data:
   postgres_data:
