@@ -78,7 +78,39 @@ services:
     container_name: redis
     ports:
       - "6379:6379" 
+  
+
+  tag-service:
+    build:
+      context: ./apps/tag-service
+      dockerfile: local.Dockerfile
+    env_file:
+      - ./apps/tag-service/.env  
+    ports:
+      - "4003:4000"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tag
+    depends_on:
+      - tag-db
+    volumes:
+      - ./apps/tag-service:/app
+      - /app/node_modules
+
+  tag-db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: taguser
+      POSTGRES_PASSWORD: tagpass
+      POSTGRES_DB: tagdb
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data_tag:/var/lib/postgresql/data  
 
 volumes:
   mysql_data:
   postgres_data:
+  postgres_data_tag:
