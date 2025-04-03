@@ -10,7 +10,7 @@ beforeAll(() => {
     execSync('npx prisma migrate deploy --schema=./prisma/schema.prisma', {
       stdio: 'inherit',
     });
-  });
+});
 
 beforeEach(async () => {
   await prisma.tag.deleteMany(); // クリーンな状態でテスト
