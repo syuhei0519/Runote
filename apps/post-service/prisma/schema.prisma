@@ -8,9 +8,19 @@ datasource db {
 }
 
 model Post {
-　@@map("post")  // 👈 DB上のテーブル名を小文字に指定
+  @@map("post") 
   id        Int      @id @default(autoincrement())
   title     String
   content   String
+  tags    PostTag[]
   createdAt DateTime @default(now())
+}
+
+model PostTag {
+  postId Int
+  tagId  Int
+
+  post   Post @relation(fields: [postId], references: [id])
+
+  @@id([postId, tagId])
 }
