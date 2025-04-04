@@ -1,11 +1,26 @@
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
 import app from '../src/app';
+import axios from 'axios';
+jest.mock('axios'); 
 
 const prisma = new PrismaClient();
 
+beforeAll(async () => {
+  await prisma.tag.createMany({
+    data: [
+      { id: 1, name: 'happy' },
+      { id: 2, name: 'tired' }
+    ],
+    skipDuplicates: true
+  });
+});
+
+// 各テスト前に投稿を作成
 beforeEach(async () => {
-  await prisma.post.deleteMany(); // 初期化
+  await prisma.postTag.deleteMany();
+  await prisma.post.deleteMany();
+  jest.clearAllMocks();
 });
 
 afterAll(async () => {
@@ -14,10 +29,11 @@ afterAll(async () => {
 
 describe('📬 Post API（共通データでのCRUDテスト）', () => {
     let createdPostId: number;
-  
-    // 各テスト前に投稿を作成
+
     beforeEach(async () => {
-      await prisma.post.deleteMany(); // 前テストの投稿を削除
+      await prisma.postTag.deleteMany();
+      await prisma.post.deleteMany();
+      jest.clearAllMocks();
       const post = await prisma.post.create({
         data: {
           title: '初期タイトル',
@@ -31,14 +47,65 @@ describe('📬 Post API（共通データでのCRUDテスト）', () => {
       await prisma.$disconnect();
     });
   
-    it('POST /posts - 新しい投稿を作成できる', async () => {
+    it('POST /posts - 新しい投稿を emotion 付きで作成できる', async () => {
+      (axios.post as jest.Mock).mockResolvedValue({ status: 201 });
+  
       const res = await request(app)
         .post('/posts')
-        .send({ title: 'テスト投稿', content: 'これはテストです' });
+        .send({
+          title: '感情付き投稿',
+          content: 'これは感情テストです',
+          tagIds: [1, 2],
+          emotion: {
+            type: 'custom',
+            label: '超エモい',
+            intensity: 5,
+          }
+        });
   
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('id');
-      expect(res.body.title).toBe('テスト投稿');
+      expect(res.body.title).toBe('感情付き投稿');
+      expect(axios.post).toHaveBeenCalledWith( // ★ emotion-service 呼び出し確認
+        expect.stringContaining('/emotions'),
+        expect.objectContaining({
+          label: '超エモい',
+          intensity: 5,
+        })
+      );
+    });
+  
+    it('POST /posts - emotionなしでも投稿可能', async () => {
+      const res = await request(app)
+        .post('/posts')
+        .send({
+          title: 'シンプル投稿',
+          content: '感情なし',
+          tagIds: [1]
+        });
+  
+      expect(res.status).toBe(201);
+      expect(res.body.title).toBe('シンプル投稿');
+      expect(axios.post).not.toHaveBeenCalled(); // ★ emotion-serviceは呼ばれない
+    });
+
+    it('POST /posts - emotion-service が失敗しても投稿は成功する', async () => {
+      (axios.post as jest.Mock).mockRejectedValue(new Error('emotion-service unreachable'));
+    
+      const res = await request(app)
+        .post('/posts')
+        .send({
+          title: 'エラー時もOK',
+          content: 'emotionは失敗',
+          emotion: {
+            type: 'preset',
+            label: 'tired',
+            presetKey: 'tired',
+            intensity: 2
+          }
+        });
+    
+      expect(res.status).toBe(201); // ✅ 投稿自体は成功
     });
   
     it('GET /posts/:id - 投稿を取得できる', async () => {
@@ -65,7 +132,8 @@ describe('📬 Post API（共通データでのCRUDテスト）', () => {
       const getRes = await request(app).get(`/posts/${createdPostId}`);
       expect(getRes.status).toBe(404);
     });
-  });
+  }
+);
 
 describe('🚨 異常系テスト', () => {
     it('GET /posts/:id - 存在しない ID を取得すると 404', async () => {
@@ -104,4 +172,26 @@ describe('🚨 異常系テスト', () => {
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('Invalid ID');
     });
-  });  
+  }
+);
+
+describe('中間テーブルへの反映テスト', () => {
+    it('POST /posts - tagIds に応じて PostTag が作成される', async () => {
+      const res = await request(app)
+        .post('/posts')
+        .send({
+          title: 'タグ付き投稿',
+          content: 'これはタグ付きです',
+          tagIds: [1, 2]
+        });
+    
+      expect(res.status).toBe(201);
+      const postId = res.body.id;
+    
+      // PostTag に正しく登録されているか確認
+      const tagLinks = await prisma.postTag.findMany({ where: { postId } });
+      const tagIds = tagLinks.map(t => t.tagId).sort();
+      expect(tagIds).toEqual([1, 2]);
+    });
+  }
+);
