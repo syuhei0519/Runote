@@ -33,12 +33,21 @@ func main() {
     mysql.InitMySQL()
 	log.Println("✅ MySQL 接続完了")
 
-    // Gin のルーティング設定
     r := gin.Default()
-    r.GET("/emotions/:post_id/:user_id", handlers.GetEmotion)
-    r.PUT("/emotions/:post_id/:user_id", handlers.UpdateEmotion)
-    r.POST("/emotions", handlers.RegisterEmotion)
-    r.DELETE("/emotions/:post_id/:user_id", handlers.DeleteEmotion)
+
+    // Gin のルーティング設定
+    // Emotionマスタ関連
+	r.GET("/emotions", handlers.GetEmotionList)
+	r.GET("/emotions/unused", handlers.GetUnusedEmotions)
+	r.POST("/emotions", handlers.RegisterEmotion)
+	r.PUT("/emotions/:id", handlers.UpdateEmotionName)
+	r.DELETE("/emotions/:id", handlers.DeleteEmotionByID)
+
+	// 投稿に紐づく感情関連
+	r.GET("/post-emotions/:post_id/:user_id", handlers.GetEmotion)
+	r.PUT("/post-emotions/:post_id/:user_id", handlers.UpdateEmotion)
+	r.DELETE("/post-emotions/:post_id/:user_id", handlers.DeleteEmotion)
+
 
     log.Println("Starting server on :8080")
     r.Run(":8080")

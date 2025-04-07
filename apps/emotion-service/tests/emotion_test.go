@@ -1,169 +1,131 @@
 package tests
 
 import (
-	"context"
-	"os"
-	"testing"
+	"encoding/json"
 	"fmt"
-
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-	"github.com/syuhei0519/Runote/apps/emotion-service/handlers"
-	"github.com/syuhei0519/Runote/apps/emotion-service/redis"
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"encoding/json"
-	goredis "github.com/redis/go-redis/v9"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/syuhei0519/Runote/apps/emotion-service/models"
+	"github.com/syuhei0519/Runote/apps/emotion-service/mysql"
+	"github.com/syuhei0519/Runote/apps/emotion-service/testutils"
 )
 
-// テスト用のRedisキー生成ヘルパー
-func redisKey(postID, userID string) string {
-	return "emotion:" + postID + ":" + userID
-}
+func TestGetEmotionList_ReturnsRegisteredData(t *testing.T) {
+	testutils.SetupTestDB()
 
-func setupRouter() *gin.Engine {
-	gin.SetMode(gin.TestMode)
-	r := gin.Default()
-	r.GET("/emotions/:post_id/:user_id", handlers.GetEmotion)
-	r.PUT("/emotions/:post_id/:user_id", handlers.UpdateEmotion)
-	r.POST("/emotions", handlers.RegisterEmotion)
-	r.DELETE("/emotions/:post_id/:user_id", handlers.DeleteEmotion)
-
-	return r
-}
-
-func TestRegisterEmotion(t *testing.T) {
-	_ = os.Setenv("REDIS_URL", "redis://redis:6379/1")
-	redis.InitRedis() // Client に接続
-
-	r := setupRouter()
-
-	postID := "testPost123"
-	userID := "testUser456"
-	emotion := "ワクワク"
-
-	payload := `{"post_id": "` + postID + `", "user_id": "` + userID + `", "emotion": "` + emotion + `"}`
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/emotions", strings.NewReader(payload))
-	req.Header.Set("Content-Type", "application/json")
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-
-	// Redis に保存されているか確認
-	val, err := redis.Client.Get(context.Background(), redisKey(postID, userID)).Result()
-	assert.NoError(t, err)
-	assert.Equal(t, emotion, val)
-}
-
-// 今後の GET / PUT / DELETE に備えて、helper も追加しておく
-func clearEmotionKey(postID, userID string) {
-	_ = redis.Client.Del(context.Background(), redisKey(postID, userID)).Err()
-}
-
-func TestGetEmotion(t *testing.T) {
-	Setup(t) // test.env読み込みとRedis初期化
-
-	// テスト用データ
-	postID := "testPost123"
-	userID := "testUser456"
-	emotion := "やった！"
-
-	// Redis に事前に保存
-	key := fmt.Sprintf("emotion:%s:%s", postID, userID)
-	err := redis.Client.Set(redis.Ctx, key, emotion, 0).Err()
-	assert.NoError(t, err, "Redisへの保存でエラー")
-
-	// Gin のルーターセットアップ
-	r := gin.Default()
-	r.GET("/emotions/:post_id/:user_id", handlers.GetEmotion)
-
-	// リクエスト送信
-	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/emotions/%s/%s", postID, userID), nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	// 検証
-	assert.Equal(t, http.StatusOK, w.Code)
-	expected := fmt.Sprintf(`{"emotion":"%s","post_id":"%s","user_id":"%s"}`, emotion, postID, userID)
-	assert.JSONEq(t, expected, w.Body.String())
-}
-
-func TestUpdateEmotion(t *testing.T) {
-    Setup(t) // test.env 読み込み & Redis 初期化
-
-    postID := "testPost123"
-    userID := "testUser456"
-    originalEmotion := "楽しい"
-    updatedEmotion := "イライラ"
-    key := fmt.Sprintf("emotion:%s:%s", postID, userID)
-
-    // 事前登録
-    err := redis.Client.Set(redis.Ctx, key, originalEmotion, 0).Err()
-    if err != nil {
-        t.Fatalf("Redis 初期登録失敗: %v", err)
-    }
-
-    // 更新リクエスト送信
-    w := httptest.NewRecorder()
-    c, _ := gin.CreateTestContext(w)
-    c.Params = []gin.Param{
-        {Key: "post_id", Value: postID},
-        {Key: "user_id", Value: userID},
-    }
-    c.Request = httptest.NewRequest("PUT", "/emotions/"+postID+"/"+userID, strings.NewReader(`{"emotion":"イライラ"}`))
-    c.Request.Header.Set("Content-Type", "application/json")
-
-    handlers.UpdateEmotion(c)
-
-    // 検証
-    assert.Equal(t, http.StatusOK, w.Code)
-
-    var resBody map[string]interface{}
-    json.Unmarshal(w.Body.Bytes(), &resBody)
-
-    assert.Equal(t, "Emotion updated", resBody["message"])
-    data := resBody["data"].(map[string]interface{})
-    assert.Equal(t, updatedEmotion, data["emotion"])
-
-    // Redis 確認
-    saved, _ := redis.Client.Get(redis.Ctx, key).Result()
-    assert.Equal(t, updatedEmotion, saved)
-}
-
-func TestDeleteEmotion(t *testing.T) {
-	Setup(t)
-
-	postID := "deleteTestPost"
-	userID := "deleteTestUser"
-	emotion := "イライラ"
-
-	key := fmt.Sprintf("emotion:%s:%s", postID, userID)
-	if err := redis.Client.Set(redis.Ctx, key, emotion, 0).Err(); err != nil {
-		t.Fatalf("Redis セットに失敗しました: %v", err)
+	emotions := []models.Emotion{
+		{Name: "楽しい", IsPreset: true},
+		{Name: "疲れた", IsPreset: false},
+	}
+	for _, e := range emotions {
+		mysql.DB.Create(&e)
 	}
 
-	router := gin.Default()
-	router.DELETE("/emotions/:post_id/:user_id", handlers.DeleteEmotion)
+	router := testutils.SetupRouter()
+	req, _ := http.NewRequest("GET", "/emotions", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
 
-	t.Run("DELETE /emotions/:post_id/:user_id - 正常削除", func(t *testing.T) {
-		req := httptest.NewRequest("DELETE", "/emotions/"+postID+"/"+userID, nil)
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
 
-		assert.Equal(t, http.StatusNoContent, w.Code)
+	var res []models.Emotion
+	err := json.Unmarshal(w.Body.Bytes(), &res)
+	assert.NoError(t, err)
+	assert.Len(t, res, 2)
+	assert.Equal(t, "楽しい", res[0].Name)
+	assert.Equal(t, "疲れた", res[1].Name)
+}
 
-		_, err := redis.Client.Get(redis.Ctx, key).Result()
-		assert.Equal(t, goredis.Nil, err)
-	})
+func TestRegisterEmotion_CreatesEmotion(t *testing.T) {
+	testutils.SetupTestDB()
 
-	t.Run("DELETE /emotions/:post_id/:user_id - 存在しない感情", func(t *testing.T) {
-		req := httptest.NewRequest("DELETE", "/emotions/none/none", nil)
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
+	router := testutils.SetupRouter()
+	body := `{"name": "エモい"}`
+	req, _ := http.NewRequest("POST", "/emotions", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusNotFound, w.Code)
-	})
+	assert.Equal(t, http.StatusCreated, w.Code)
+
+	var res models.Emotion
+	err := json.Unmarshal(w.Body.Bytes(), &res)
+	assert.NoError(t, err)
+	assert.Equal(t, "エモい", res.Name)
+	assert.False(t, res.IsPreset)
+}
+
+func TestUpdateEmotionName_UpdatesSuccessfully(t *testing.T) {
+	testutils.SetupTestDB()
+
+	// 感情登録
+	emotion := models.Emotion{Name: "仮", IsPreset: false}
+	mysql.DB.Create(&emotion)
+
+	// 正しくIDを取得できているか確認
+	assert.NotZero(t, emotion.ID)
+
+	router := testutils.SetupRouter()
+	body := `{"name": "変更後の名前"}`
+	url := fmt.Sprintf("/emotions/%d", emotion.ID)
+	req, _ := http.NewRequest("PUT", url, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var res models.Emotion
+	json.Unmarshal(w.Body.Bytes(), &res)
+	assert.Equal(t, "変更後の名前", res.Name)
+}
+
+func TestDeleteEmotionByID_DeletesUnusedEmotion(t *testing.T) {
+	testutils.SetupTestDB()
+
+	emotion := models.Emotion{Name: "消していい", IsPreset: false}
+	mysql.DB.Create(&emotion)
+
+	router := testutils.SetupRouter()
+	url := fmt.Sprintf("/emotions/%d", emotion.ID)
+	req, _ := http.NewRequest("DELETE", url, nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var count int64
+	mysql.DB.Model(&models.Emotion{}).Where("id = ?", emotion.ID).Count(&count)
+	assert.Equal(t, int64(0), count)
+}
+
+func TestDeleteEmotionByID_FailsIfUsed(t *testing.T) {
+	testutils.SetupTestDB()
+
+	// 投稿を作成（外部キー制約を回避）
+	post := models.Post{}
+	mysql.DB.Create(&post)
+
+	// 感情作成
+	emotion := models.Emotion{Name: "使用中", IsPreset: false}
+	mysql.DB.Create(&emotion)
+
+	postEmotion := models.PostEmotion{
+		PostID:    post.ID,
+		EmotionID: emotion.ID,
+		Intensity: 3,
+	}
+	mysql.DB.Create(&postEmotion)
+
+	router := testutils.SetupRouter()
+	url := fmt.Sprintf("/emotions/%d", emotion.ID)
+	req, _ := http.NewRequest("DELETE", url, nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusConflict, w.Code)
 }
