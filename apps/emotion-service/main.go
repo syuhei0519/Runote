@@ -9,6 +9,7 @@ import (
 
     "github.com/syuhei0519/Runote/apps/emotion-service/handlers"
     "github.com/syuhei0519/Runote/apps/emotion-service/redis"
+    "github.com/syuhei0519/Runote/apps/emotion-service/mysql"
 )
 
 func main() {
@@ -26,6 +27,11 @@ func main() {
 	log.Println("🔁 Redis 接続開始")
     redis.InitRedis()
 	log.Println("✅ Redis 接続完了")
+
+    // MySQL初期化
+    log.Println("🔁 MySQL 接続開始")
+    mysql.InitMySQL()
+	log.Println("✅ MySQL 接続完了")
 
     // Gin のルーティング設定
     r := gin.Default()
