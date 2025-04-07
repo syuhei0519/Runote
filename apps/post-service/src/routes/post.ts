@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { PostSchema } from '../validators/post';
-import type { z } from 'zod';
 import { ZodError } from 'zod';
 import axios from 'axios';
 import type { PostInput } from '../validators/post';
@@ -38,14 +37,20 @@ router.post('/', async (req: Request, res: Response) => {
   const { title, content, tagIds = [], emotion } = parsed.data as PostInput;
 
   try {
+    // 1. Postを作成
     const newPost = await prisma.post.create({
       data: {
         title,
         content,
-        tags: {
-          create: tagIds.map(tagId => ({ tagId }))
-        }
       }
+    });
+
+    // 2. 中間テーブルを通してタグを紐づけ
+    await prisma.postTag.createMany({
+      data: tagIds.map(tagId => ({
+        postId: newPost.id,
+        tagId: tagId,
+      })),
     });
 
     // emotion がある場合だけ emotion-service を呼ぶ、失敗しても無視
