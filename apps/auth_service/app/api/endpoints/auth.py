@@ -16,9 +16,6 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
-# 仮のインメモリユーザーDB（後でDBに置き換え）
-# fake_users = {}
-
 @router.get("/me")
 def read_current_user(current_user: User = Depends(get_current_user)):
     return {
