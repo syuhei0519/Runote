@@ -9,6 +9,8 @@ packages = [{ include = "app" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+pymysql = "^1.1.0"
+cryptography = "^42.0.0"
 
 # Core
 fastapi = "^0.110.0"
