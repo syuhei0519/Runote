@@ -248,5 +248,5 @@ func TestDeletePostEmotion_DeletesDBAndCache(t *testing.T) {
 
 	// ✅ Redisからキーが削除されていることを確認
 	_, err = redisPkg.Client.Get(redisPkg.Ctx, key).Result()
-	assert.ErrorIs(t, err, redislib.Nil) // redis2 は `go-redis/v9` を redis2 などで import したもの
+	assert.ErrorIs(t, err, redislib.Nil) 
 }
