@@ -10,6 +10,10 @@ import (
     "github.com/syuhei0519/Runote/apps/emotion-service/handlers"
     "github.com/syuhei0519/Runote/apps/emotion-service/redis"
     "github.com/syuhei0519/Runote/apps/emotion-service/mysql"
+
+    "github.com/swaggo/gin-swagger"
+    "github.com/swaggo/files"
+    _ "github.com/syuhei0519/Runote/apps/emotion-service/docs"
 )
 
 func main() {
@@ -34,6 +38,9 @@ func main() {
 	log.Println("✅ MySQL 接続完了")
 
     r := gin.Default()
+
+    // Swagger UI を追加
+    r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
     // Gin のルーティング設定
     // Emotionマスタ関連
