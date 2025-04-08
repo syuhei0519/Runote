@@ -2,24 +2,30 @@ package testutils
 
 import (
     "os"
+	"testing"
+	"runtime"
+	"path/filepath"
+	"github.com/joho/godotenv"
     "github.com/syuhei0519/Runote/apps/emotion-service/mysql"
 	"github.com/gin-gonic/gin"
 	"github.com/syuhei0519/Runote/apps/emotion-service/handlers"
+	"github.com/syuhei0519/Runote/apps/emotion-service/redis"
+
 )
 
-// func Setup(t *testing.T) {
-//     _, b, _, _ := runtime.Caller(0)
-//     basePath := filepath.Dir(b)
-//     envPath := filepath.Join(basePath, "..", "test.env")
+func Setup(t *testing.T) {
+    _, b, _, _ := runtime.Caller(0)
+    basePath := filepath.Dir(b)
+    envPath := filepath.Join(basePath, "..", "test.env")
 
-//     os.Setenv("ENV", "test")
-//     if err := godotenv.Load(envPath); err != nil {
-//         t.Fatalf("❌ test.env が読み込めません: %v", err)
-//     }
+    os.Setenv("ENV", "test")
+    if err := godotenv.Load(envPath); err != nil {
+        t.Fatalf("❌ test.env が読み込めません: %v", err)
+    }
 
-//     redis.InitRedis()
-//     redis.FlushAll()
-// }
+    redis.InitRedis()
+    redis.FlushAll()
+}
 
 func SetupTestDB() {
 	// test用の環境変数（DATABASE_URL）をセット
