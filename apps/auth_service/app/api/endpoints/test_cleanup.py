@@ -1,8 +1,8 @@
 # routers/test_cleanup.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from db import get_db
-from models import User  # 必要なモデルをインポート
+from app.db import get_db
+from app.models.user import User
 
 router = APIRouter()
 

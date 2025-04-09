@@ -1,7 +1,8 @@
+import os
 from fastapi import FastAPI
 from app.api import router  # app/api/__init__.py に router が定義されている想定
 from app.db import Base, engine
-from routers import test_cleanup
+from app.api.endpoints import test_cleanup
 
 app = FastAPI(
     title="Runote Auth Service",
