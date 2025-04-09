@@ -6,10 +6,13 @@ import (
 
     "github.com/gin-gonic/gin"
     "github.com/joho/godotenv"
+    "github.com/redis/go-redis/v9"
 
     "github.com/syuhei0519/Runote/apps/emotion-service/handlers"
-    "github.com/syuhei0519/Runote/apps/emotion-service/redis"
+    myredis "github.com/syuhei0519/Runote/apps/emotion-service/redis"
     "github.com/syuhei0519/Runote/apps/emotion-service/mysql"
+
+    "gorm.io/gorm"
 
     "github.com/swaggo/gin-swagger"
     "github.com/swaggo/files"
@@ -23,17 +26,16 @@ func main() {
         envFile = "test.env"
     }
 
-    if os.Getenv("NODE_ENV") == "test" {
-        r.POST("/test/cleanup", handler.TestCleanupHandler(db, redisClient))
-    }
-
     if err := godotenv.Load(envFile); err != nil {
         log.Printf("%s が見つかりませんでした（スキップ）\n", envFile)
     }
 
+    var db *gorm.DB
+	var redisClient *redis.Client
+
     // Redis 初期化
 	log.Println("🔁 Redis 接続開始")
-    redis.InitRedis()
+    myredis.InitRedis()
 	log.Println("✅ Redis 接続完了")
 
     // MySQL初期化
@@ -42,6 +44,10 @@ func main() {
 	log.Println("✅ MySQL 接続完了")
 
     r := gin.Default()
+
+    if os.Getenv("NODE_ENV") == "test" {
+        r.POST("/test/cleanup", handlers.TestCleanupHandler(db, redisClient))
+    }
 
     // Swagger UI を追加
     r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
