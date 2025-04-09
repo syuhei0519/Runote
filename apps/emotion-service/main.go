@@ -23,6 +23,10 @@ func main() {
         envFile = "test.env"
     }
 
+    if os.Getenv("NODE_ENV") == "test" {
+        r.POST("/test/cleanup", handler.TestCleanupHandler(db, redisClient))
+    }
+
     if err := godotenv.Load(envFile); err != nil {
         log.Printf("%s が見つかりませんでした（スキップ）\n", envFile)
     }

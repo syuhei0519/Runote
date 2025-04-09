@@ -1,0 +1,10 @@
+- name: Create post without emotion
+  baseUrl: http://post-service:3000
+  method: POST
+  url: /posts
+  body:
+    title: "Integration Test Post"
+    content: "This is from integration test"
+  expect:
+    status: 201
+    bodyContains: "Integration Test Post"

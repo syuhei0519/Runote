@@ -1,0 +1,158 @@
+version: "3.8"
+
+services:
+  # auth-service 用 MySQL
+  auth-test-db:
+    image: mysql:8
+    container_name: auth-test-db
+    environment:
+      MYSQL_DATABASE: auth_test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "13306:3306"
+    volumes:
+      - auth-test-data:/var/lib/mysql
+    networks:
+      - runote-net
+
+  # post-service 用 PostgreSQL
+  post-test-db:
+    image: postgres:15
+    container_name: post-test-db
+    environment:
+      POSTGRES_DB: post_test
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    ports:
+      - "15434:5432"
+    volumes:
+      - post-test-data:/var/lib/postgresql/data
+    networks:
+      - runote-net
+
+  # emotion-service 用 MySQL
+  emotion-test-db:
+    image: mysql:8
+    container_name: emotion-test-db
+    environment:
+      MYSQL_DATABASE: emotion_test
+      MYSQL_USER: emotion
+      MYSQL_PASSWORD: emotionpass
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "13310:3306"
+    volumes:
+      - emotion-test-data:/var/lib/mysql
+    networks:
+      - runote-net
+
+  # emotion-service 用 Redis
+  emotion-test-redis:
+    image: redis:7-alpine
+    container_name: emotion-test-redis
+    ports:
+      - "16379:6379"
+    networks:
+      - runote-net
+
+  # tag-service 用 PostgreSQL
+  tag-test-db:
+    image: postgres:15
+    container_name: tag-test-db
+    environment:
+      POSTGRES_DB: tag_test
+      POSTGRES_USER: taguser
+      POSTGRES_PASSWORD: tagpass
+    ports:
+      - "15435:5432"
+    volumes:
+      - tag-test-data:/var/lib/postgresql/data
+    networks:
+      - runote-net
+
+  # 各サービス（test.env を用意）
+  auth-service:
+    build:
+      context: ./apps/auth_service
+      dockerfile: local.Dockerfile
+    container_name: auth_service-test
+    volumes:
+      - ./apps/auth_service:/app  
+    env_file:
+      - ./apps/auth_service/test.env
+    depends_on:
+      - auth-test-db
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    networks:
+      - runote-net
+
+  post-service:
+    build:
+      context: ./apps/post-service
+      dockerfile: local.Dockerfile
+    container_name: post-service-test
+    volumes:
+      - ./apps/post-service:/app
+    env_file:
+      - ./apps/post-service/test.env
+    depends_on:
+      - post-test-db
+    networks:
+      - runote-net
+
+  emotion-service:
+    build:
+      context: ./apps/emotion-service
+      dockerfile: local.Dockerfile
+    container_name: emotion-service-test
+    volumes:
+      - ./apps/emotion-service:/app
+    env_file:
+      - ./apps/emotion-service/test.env
+    depends_on:
+      - emotion-test-db
+      - emotion-test-redis
+    networks:
+      - runote-net
+
+  tag-service:
+    build:
+      context: ./apps/tag-service
+      dockerfile: local.Dockerfile
+    container_name: tag-service-test
+    volumes:
+      - ./apps/tag-service:/app
+    env_file:
+      - ./apps/tag-service/test.env
+    depends_on:
+      - tag-test-db
+    networks:
+      - runote-net
+
+  # 結合テスト実行用コンテナ
+  integration-test-runner:
+    build:
+      context: ./tests/runner
+    depends_on:
+      - auth-service
+      - post-service
+      - emotion-service
+      - tag-service
+    environment:
+      - NODE_ENV=test
+    networks:
+      - runote-net
+    command: ["node", "--loader", "ts-node/esm", "index.ts"]
+
+volumes:
+  auth-test-data:
+  post-test-data:
+  emotion-test-data:
+  tag-test-data:
+
+networks:
+  runote-net:
+    driver: bridge

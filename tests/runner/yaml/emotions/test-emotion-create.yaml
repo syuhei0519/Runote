@@ -1,0 +1,9 @@
+- name: Register custom emotion
+  baseUrl: http://emotion-service:3000
+  method: POST
+  url: /emotions
+  body:
+    name: "超エモい"
+  expect:
+    status: 201
+    bodyContains: "超エモい"
