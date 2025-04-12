@@ -72,16 +72,16 @@ services:
     networks:
       - runote-net
 
-  # 各サービス（test.env を用意）
+  # 各サービスのアプリ（test.env を正しく指定）
   auth-service:
     build:
-      context: ./apps/auth_service
+      context: ../apps/auth_service
       dockerfile: local.Dockerfile
     container_name: auth_service-test
     volumes:
-      - ./apps/auth_service:/app  
+      - ../apps/auth_service:/app
     env_file:
-      - ./apps/auth_service/test.env
+      - ../apps/auth_service/test.env
     depends_on:
       - auth-test-db
     environment:
@@ -91,13 +91,13 @@ services:
 
   post-service:
     build:
-      context: ./apps/post-service
+      context: ../apps/post-service
       dockerfile: local.Dockerfile
     container_name: post-service-test
     volumes:
-      - ./apps/post-service:/app
+      - ../apps/post-service:/app
     env_file:
-      - ./apps/post-service/test.env
+      - ../apps/post-service/test.env
     depends_on:
       - post-test-db
     networks:
@@ -105,13 +105,15 @@ services:
 
   emotion-service:
     build:
-      context: ./apps/emotion-service
+      context: ../apps/emotion-service
       dockerfile: local.Dockerfile
     container_name: emotion-service-test
     volumes:
-      - ./apps/emotion-service:/app
+      - ../apps/emotion-service:/app
     env_file:
-      - ./apps/emotion-service/test.env
+      - ../apps/emotion-service/test.env
+    environment:
+      - ENV=test
     depends_on:
       - emotion-test-db
       - emotion-test-redis
@@ -120,22 +122,24 @@ services:
 
   tag-service:
     build:
-      context: ./apps/tag-service
+      context: ../apps/tag-service
       dockerfile: local.Dockerfile
     container_name: tag-service-test
     volumes:
-      - ./apps/tag-service:/app
+      - ../apps/tag-service:/app
     env_file:
-      - ./apps/tag-service/test.env
+      - ../apps/tag-service/test.env
     depends_on:
       - tag-test-db
     networks:
       - runote-net
 
-  # 結合テスト実行用コンテナ
+  # 結合テスト実行用
   integration-test-runner:
     build:
-      context: ./tests/runner
+      context: ./runner
+      dockerfile: Dockerfile
+    container_name: integration-test-runner
     depends_on:
       - auth-service
       - post-service
@@ -143,9 +147,15 @@ services:
       - tag-service
     environment:
       - NODE_ENV=test
+      - VERBOSE=true
     networks:
       - runote-net
-    command: ["node", "--loader", "ts-node/esm", "index.ts"]
+    command: >
+      sh -c "wait-port post-service:3000 &&
+             wait-port emotion-service:8080 &&
+             wait-port tag-service:4000 &&
+             wait-port auth-service:8000 &&
+             node --loader ts-node/esm index.ts"
 
 volumes:
   auth-test-data:

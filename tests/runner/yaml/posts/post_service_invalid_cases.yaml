@@ -1,0 +1,60 @@
+- name: 投稿取得：存在しないIDを指定
+  baseUrl: http://post-service:3000
+  method: GET
+  url: /posts/999999
+  expect:
+    status: 404
+
+- name: 投稿登録：title 省略 → 400
+  baseUrl: http://post-service:3000
+  method: POST
+  url: /posts
+  body:
+    content: "Content only"
+    emotionId: 1
+  expect:
+    status: 400
+    bodyContains: "title"
+
+- name: 投稿登録：emotionId に存在しないID → 400 or 422
+  baseUrl: http://post-service:3000
+  method: POST
+  url: /posts
+  body:
+    title: "Test post"
+    content: "test content"
+    emotionId: 9999
+  expect:
+    status: 422
+    bodyContains: "emotionId"
+
+- name: 投稿登録：認証ヘッダーなし → 401 Unauthorized
+  baseUrl: http://post-service:3000
+  method: POST
+  url: /posts
+  body:
+    title: "Test"
+    content: "Content"
+    emotionId: 1
+  expect:
+    status: 401
+
+- name: 投稿更新：他人の投稿を更新 → 403 Forbidden
+  baseUrl: http://post-service:3000
+  method: PUT
+  url: /posts/2
+  body:
+    title: "Hacked!"
+    content: "Try to change someone else's post"
+    emotionId: 1
+  expect:
+    status: 403
+    bodyContains: "forbidden"
+
+- name: 投稿削除：認証済みだが存在しない投稿 → 404
+  baseUrl: http://post-service:3000
+  method: DELETE
+  url: /posts/999999
+  expect:
+    status: 404
+    bodyContains: "not found"

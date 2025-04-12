@@ -1,5 +1,5 @@
 - name: Register custom emotion
-  baseUrl: http://emotion-service:3000
+  baseUrl: http://emotion-service:8080
   method: POST
   url: /emotions
   body:
