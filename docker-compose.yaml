@@ -1,4 +1,29 @@
 services:
+  nginx:
+    image: nginx:stable
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api-gateway
+    networks:
+      - runote-net
+
+  api-gateway:
+    build:
+      context: ./apps/api-gateway
+      dockerfile: local.Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - post-service
+      - auth-service
+      - emotion-service
+      - tag-service
+    networks:
+      - runote-net
+
   auth-service:
     build: 
       context: ./apps/auth_service
@@ -71,7 +96,7 @@ services:
       dockerfile: local.Dockerfile
     container_name: emotion-service
     ports:
-      - "8080:8080"
+      - "4001:8080"
     volumes:
       - ./apps/emotion-service:/app
     environment:
