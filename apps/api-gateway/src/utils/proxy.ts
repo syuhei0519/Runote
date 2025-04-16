@@ -26,7 +26,6 @@ function shouldSkipAuth(req: Request): boolean {
 }
 
 export async function proxyRequest(req: Request, res: Response, targetUrl: string) {
-  console.log('[Proxy]', req.method, req.originalUrl, '→', targetUrl);
   if (shouldSkipAuth(req)) {
     try {
       const result = await axios({
@@ -40,8 +39,6 @@ export async function proxyRequest(req: Request, res: Response, targetUrl: strin
       });
       return res.status(result.status).json(result.data);
     } catch (err: any) {
-      console.error(`[Proxy Error] ${err.message}`);
-      console.error(`[Proxy Error Detail]`, err.response?.data);
       return res.status(err.response?.status || 500).json({
         error: 'Upstream service error',
         detail: err.response?.data || err.message,
@@ -58,15 +55,9 @@ export async function proxyRequest(req: Request, res: Response, targetUrl: strin
   const token = authHeader.split(' ')[1];
   let decoded: string | jwt.JwtPayload;
 
-  console.log('[JWT] Raw Header:', authHeader);
-  console.log('[DEBUG] token:', token);
-  console.log('[DEBUG] JWT_SECRET in gateway:', JWT_SECRET);
-
   try {
     decoded = jwt.verify(token, JWT_SECRET);
-    console.log('✅ JWT Verified:', decoded);
   } catch (err: any) {
-    console.error('❌ JWT Verification Failed:', err.message);
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({ error: 'Token expired' });
     }

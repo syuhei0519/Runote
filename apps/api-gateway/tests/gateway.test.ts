@@ -42,16 +42,13 @@ async function fetchJwt(): Promise<string> {
     console.log('🧹 Cleanup done');
   
     const registerRes = await api.post('/api/auth/register').send(testUser);
-    console.log('📝 Register response:', registerRes.body);
     expect([200, 201]).toContain(registerRes.status);
   
     const loginRes = await api.post('/api/auth/login').send(testUser);
-    console.log('📦 Login response body:', loginRes.body);
     expect(loginRes.status).toBe(200);
     expect(loginRes.body.access_token).toBeDefined();
   
     const token = `Bearer ${loginRes.body.access_token}`;
-    console.log('🧪 JWT for test:', token);
     return token;
 }  
 
@@ -61,7 +58,6 @@ describe('🧪 Runote API Gateway E2E via Nginx', () => {
     await resetDatabase();
     await registerUser();
     jwtToken = await fetchJwt();
-    console.log('🧪 JWT for test:', jwtToken);
   });
 
   it('✅ GET /api/posts → 200 + data（要JWT）', async () => {
