@@ -11,8 +11,8 @@ app = FastAPI(
 
 app.include_router(router)
 
-if os.getenv("NODE_ENV") == "test":
-    app.include_router(test_cleanup.router)
+if os.getenv("ENV") == "test":
+    app.include_router(test_cleanup.router, prefix="/auth")
 
 Base.metadata.create_all(bind=engine)
 

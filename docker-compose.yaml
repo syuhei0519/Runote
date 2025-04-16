@@ -16,6 +16,11 @@ services:
       dockerfile: local.Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      - ./apps/api-gateway:/app
+      - /app/node_modules
+    env_file:
+      - ./apps/api-gateway/dev.env
     depends_on:
       - post-service
       - auth-service
@@ -33,7 +38,7 @@ services:
     ports:
       - 8000:8000
     env_file:
-      - .env.dev
+      - ./apps/auth_service/test.env
     depends_on:
       - mysql
     environment:

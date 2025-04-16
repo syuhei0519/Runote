@@ -1,25 +1,31 @@
 {
-    "name": "api-gateway",
-    "version": "1.0.0",
-    "description": "Runote API Gateway using Express + TypeScript",
-    "main": "src/index.ts",
-    "scripts": {
-      "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-      "start": "ts-node src/index.ts",
-      "build": "tsc"
-    },
-    "dependencies": {
-      "axios": "^1.6.7",
-      "dotenv": "^16.3.1",
-      "express": "^4.18.2",
-      "jsonwebtoken": "^9.0.2"
-    },
-    "devDependencies": {
-      "@types/express": "^4.17.17",
-      "@types/jsonwebtoken": "^9.0.2",
-      "@types/node": "^20.4.2",
-      "ts-node": "^10.9.1",
-      "ts-node-dev": "^2.0.0",
-      "typescript": "^5.3.3"
-    }
-  }  
+  "name": "api-gateway",
+  "version": "1.0.0",
+  "description": "Runote API Gateway using Express + TypeScript + Nginx",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/node": "^20.4.2",
+    "@types/supertest": "^2.0.12",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}

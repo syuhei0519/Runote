@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// 各ルートに振り分け（/api/* はNginxが除去済み）
+// 各ルートに振り分け（/api/* は Nginx が除去済み）
 app.use('/posts', postsRoutes);
 app.use('/auth', authRoutes);
 app.use('/emotions', emotionsRoutes);
