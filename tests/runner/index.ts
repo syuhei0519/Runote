@@ -138,26 +138,6 @@ runAllTests().catch((err) => {
   process.exit(1);
 });
 
-// beforeEach(async () => {
-//   const services = [
-//     { name: 'auth-service', url: 'http://auth-service:8000' },
-//     { name: 'post-service', url: 'http://post-service:3000' },
-//     { name: 'emotion-service', url: 'http://emotion-service:8080' },
-//     { name: 'tag-service', url: 'http://tag-service:4000' }
-//   ];
-
-//   for (const service of services) {
-//     try {
-//       await request(service.url)
-//         .delete('/test/cleanup')
-//         .expect(204);
-//       console.log(`✅ ${service.name} cleanup done`);
-//     } catch (e) {
-//       console.warn(`⚠️ ${service.name} cleanup failed:`, e.message);
-//     }
-//   }
-// });
-
 async function cleanupServices() {
   const services = [
     { name: 'auth-service', url: 'http://auth-service:8000' },
