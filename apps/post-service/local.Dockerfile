@@ -18,4 +18,4 @@ COPY . .
 RUN npx prisma generate
 
 # 開発用のコマンド（ts-node-dev） + Prisma マイグレーション反映
-CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npx ts-node-dev --respawn src/index.ts"]
+CMD ["sh", "-c", "npx ts-node scripts/wait-for-db.ts && npx prisma generate && npx prisma db push && npx ts-node-dev src/index.ts"]
