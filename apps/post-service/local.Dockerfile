@@ -17,5 +17,5 @@ COPY . .
 # Prisma Client を生成
 RUN npx prisma generate
 
-# 開発用のコマンド（ts-node-dev）
-CMD ["npx", "ts-node-dev", "--respawn", "src/index.ts"]
+# 開発用のコマンド（ts-node-dev） + Prisma マイグレーション反映
+CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npx ts-node-dev --respawn src/index.ts"]

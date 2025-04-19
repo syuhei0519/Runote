@@ -12,7 +12,7 @@ app = FastAPI(
     version="0.1.0"
 )
 
-def wait_for_mysql(max_retries=10, delay=3):
+def wait_for_mysql(max_retries=20, delay=3):
     for i in range(max_retries):
         try:
             with engine.connect() as conn:
