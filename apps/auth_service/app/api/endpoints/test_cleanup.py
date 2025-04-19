@@ -9,7 +9,7 @@ router = APIRouter()
 
 @router.post("/test/cleanup")
 def cleanup_test_data(db: Session = Depends(get_db)):
-    print("🧪 test/cleanup called")
+    print("🧪 cleanup called")
     if os.getenv("ENV") != "test":
         raise HTTPException(status_code=403, detail="Forbidden in non-test env")
 

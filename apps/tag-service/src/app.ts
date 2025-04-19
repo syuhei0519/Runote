@@ -11,7 +11,7 @@ app.get('/health', (req, res) => {
   });
 
 if (process.env.NODE_ENV === 'test') {
-  app.use('/test', testRoutes); // ← ここで有効化
+  app.use('/test', testRoutes);
 }
 
 export default app;

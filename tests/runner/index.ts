@@ -170,7 +170,7 @@ async function cleanupServices() {
     try {
       await request(service.url)
         .post('/test/cleanup')
-        .expect(204);
+        .expect(200);
       console.log(`✅ ${service.name} cleanup done`);
     } catch (e) {
       console.warn(`⚠️ ${service.name} cleanup failed:`, (e as Error).message);

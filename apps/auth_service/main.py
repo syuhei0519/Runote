@@ -27,7 +27,7 @@ def wait_for_mysql(max_retries=20, delay=3):
 app.include_router(router)
 
 if os.getenv("ENV") == "test":
-    app.include_router(test_cleanup.router, prefix="/auth")
+    app.include_router(test_cleanup.router)
 
 wait_for_mysql()
 

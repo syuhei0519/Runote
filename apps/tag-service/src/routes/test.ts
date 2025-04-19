@@ -16,7 +16,7 @@ router.post('/cleanup', async (_req, res) => {
     await prisma.postTag?.deleteMany(); // 中間テーブルがある場合（存在しなければ削除OK）
     await prisma.tag.deleteMany();
 
-    res.status(204).send();
+    res.status(200).send();
   } catch (error) {
     console.error('Cleanup Error:', error);
     res.status(500).json({ message: 'Cleanup failed' });

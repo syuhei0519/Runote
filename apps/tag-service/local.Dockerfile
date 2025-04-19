@@ -18,4 +18,4 @@ COPY . .
 RUN npx prisma generate
 
 # 開発用のコマンド（ts-node-dev）
-CMD ["npx", "ts-node-dev", "--respawn", "src/index.ts"]
+CMD ["sh", "-c", "npx prisma db push && npx ts-node-dev --respawn src/index.ts"]
