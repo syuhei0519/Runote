@@ -35,12 +35,12 @@ func main() {
 
     // Redis 初期化
 	log.Println("🔁 Redis 接続開始")
-    myredis.InitRedis()
+    redisClient = myredis.InitRedis()
 	log.Println("✅ Redis 接続完了")
 
     // MySQL初期化
     log.Println("🔁 MySQL 接続開始")
-    mysql.InitMySQL()
+    db = mysql.InitMySQL()
 	log.Println("✅ MySQL 接続完了")
 
     r := gin.Default()
@@ -53,17 +53,17 @@ func main() {
     r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
     // Gin のルーティング設定
-    // Emotionマスタ関連
-	r.GET("/emotions", handlers.GetEmotionList)
-	r.GET("/emotions/unused", handlers.GetUnusedEmotions)
-	r.POST("/emotions", handlers.RegisterEmotion)
-	r.PUT("/emotions/:id", handlers.UpdateEmotionName)
-	r.DELETE("/emotions/:id", handlers.DeleteEmotionByID)
+    // Emotion マスタ
+    r.POST("/emotions", handlers.RegisterEmotion(db))
+    r.GET("/emotions", handlers.GetEmotionList(db))
+    r.GET("/emotions/unused", handlers.GetUnusedEmotions(db))
+    r.PUT("/emotions/:id", handlers.UpdateEmotionName(db))
+    r.DELETE("/emotions/:id", handlers.DeleteEmotionByID(db))
 
-	// 投稿に紐づく感情関連
-	r.GET("/post-emotions/:post_id/:user_id", handlers.GetEmotion)
-	r.PUT("/post-emotions/:post_id/:user_id", handlers.UpdateEmotion)
-	r.DELETE("/post-emotions/:post_id/:user_id", handlers.DeleteEmotion)
+    // 投稿に紐づく感情
+    r.GET("/post-emotions/:post_id/:user_id", handlers.GetEmotion(db, redisClient))
+    r.PUT("/post-emotions/:post_id/:user_id", handlers.UpdateEmotion(db, redisClient))
+    r.DELETE("/post-emotions/:post_id/:user_id", handlers.DeleteEmotion(db, redisClient))
 
 
     log.Println("Starting server on :8080")

@@ -10,9 +10,7 @@ import (
 	"github.com/syuhei0519/Runote/apps/emotion-service/models"
 )
 
-var DB *gorm.DB
-
-func InitMySQL() {
+func InitMySQL() *gorm.DB {
 	dsn := os.Getenv("DATABASE_URL")
 	maxRetries := 10
 	var db *gorm.DB
@@ -38,6 +36,6 @@ func InitMySQL() {
 		log.Fatalf("❌ マイグレーション失敗: %v", err)
 	}
 
-	DB = db
 	log.Println("✅ MySQL 接続 & マイグレーション完了")
+	return db
 }

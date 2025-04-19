@@ -22,21 +22,21 @@ func Setup(t *testing.T) {
     if err := godotenv.Load(envPath); err != nil {
         t.Fatalf("❌ test.env が読み込めません: %v", err)
     }
-
-    redis.InitRedis()
-    redis.FlushAll()
 }
 
 func SetupTestDB() {
 	// test用の環境変数（DATABASE_URL）をセット
 	os.Setenv("DATABASE_URL", "emotion:emotionpass@tcp(emotion-db:3306)/emotiondb?charset=utf8mb4&parseTime=True&loc=Local")
 
+	redisClient = myredis.InitRedis()
+    redis.FlushAll(redisClient)
+
 	// DB初期化（mysql/client.goのInit関数を使う）
-	mysql.InitMySQL()
+	db = mysql.InitMySQL()
 
 	// テスト用に全削除（安全確認してから）
-	mysql.DB.Exec("DELETE FROM post_emotions")
-	mysql.DB.Exec("DELETE FROM emotions")
+	db.Exec("DELETE FROM post_emotions")
+	db.Exec("DELETE FROM emotions")
 }
 
 func SetupRouter() *gin.Engine {

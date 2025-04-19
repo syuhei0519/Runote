@@ -50,7 +50,8 @@ func TestCleanupHandler(db *gorm.DB, redisClient *redis.Client) gin.HandlerFunc 
 			return
 		}
 
-		// 204 No Content には body を返さない
-		c.Status(http.StatusNoContent)
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Cleanup successful",
+		})
 	}
 }
