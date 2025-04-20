@@ -29,6 +29,9 @@ router.get('/:id', async (req: Request, res: Response) => {
   
 // POST /posts
 router.post('/', async (req: Request, res: Response) => {
+  const userId = Number(req.headers['x-user-id']);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
   const parsed = PostSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.format() });
@@ -42,6 +45,7 @@ router.post('/', async (req: Request, res: Response) => {
       data: {
         title,
         content,
+        userId,
       }
     });
 
@@ -77,10 +81,18 @@ router.put('/:id', async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
 
+    // 所有者情報はAPI Gateway で注入される前提
+    const userId = Number(req.header('X-User-Id'));
+
     try {
       const parsed = PostSchema.parse(req.body);
       const existing = await prisma.post.findUnique({ where: { id } });
       if (!existing) return res.status(404).json({ error: 'Post not found' });
+
+      // ✅ 所有者チェック
+      if (existing.userId !== userId) {
+        return res.status(403).json({ error: 'forbidden' });
+      }
   
       const updated = await prisma.post.update({
         where: { id },
@@ -98,14 +110,21 @@ router.put('/:id', async (req: Request, res: Response) => {
   
 // DELETE /posts/:id
 router.delete('/:id', async (req: Request, res: Response) => {
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
-  
-    const existing = await prisma.post.findUnique({ where: { id } });
-    if (!existing) return res.status(404).json({ error: 'Post not found' });
-  
-    await prisma.post.delete({ where: { id } });
-    res.status(204).send(); // ✅ No Content を返す
+  const id = Number(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
+
+  const userId = Number(req.header('X-User-Id'));
+
+  const existing = await prisma.post.findUnique({ where: { id } });
+  if (!existing) return res.status(404).json({ error: 'Post not found' });
+
+  // 所有者チェック
+  if (existing.userId !== userId) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+
+  await prisma.post.delete({ where: { id } });
+  res.status(204).send();
 });
   
 export default router;

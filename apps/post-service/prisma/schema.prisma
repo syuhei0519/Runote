@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "./node_modules/@prisma/client"
 }
 
 datasource db {
@@ -13,6 +12,8 @@ model Post {
   id        Int      @id @default(autoincrement())
   title     String
   content   String
+  userId  Int
+  user    User @relation(fields: [userId], references: [id])
   tags    PostTag[]
   createdAt DateTime @default(now())
 }
@@ -33,4 +34,11 @@ model Tag {
   name  String
 
   posts PostTag[]  // PostTagとのリレーション
+}
+
+model User {
+  id    Int    @id @default(autoincrement())
+  name  String
+
+  posts Post[] // 投稿とのリレーション（1:N）
 }
