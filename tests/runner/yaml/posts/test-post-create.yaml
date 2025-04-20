@@ -1,7 +1,8 @@
 - name: Create post without emotion
-  baseUrl: http://post-service:3000
+  baseUrl: http://api-gateway:3000
   method: POST
   url: /posts
+  auth: true
   body:
     title: "Integration Test Post"
     content: "This is from integration test"

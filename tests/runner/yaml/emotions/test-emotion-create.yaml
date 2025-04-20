@@ -1,7 +1,8 @@
 - name: Register custom emotion
-  baseUrl: http://emotion-service:8080
+  baseUrl: http://api-gateway:3000
   method: POST
   url: /emotions
+  auth: true
   body:
     name: "超エモい"
   expect:

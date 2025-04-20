@@ -14,6 +14,7 @@ type TestCase = {
   baseUrl: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   url: string;
+  auth?: boolean;
   headers?: Record<string, string>;
   body?: any;
   expect: {
@@ -24,6 +25,10 @@ type TestCase = {
 };
 
 const TEST_DIR = join(__dirname, 'yaml');
+const GATEWAY_BASE_URL = 'http://api-gateway:3000';
+const TEST_USER = { username: 'testuser', password: 'password123' };
+
+let jwtToken: string | null = null;
 
 function getAllYamlFiles(dir: string): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -39,17 +44,59 @@ function getAllYamlFiles(dir: string): string[] {
   });
 }
 
+async function setupTestUser(): Promise<void> {
+  try {
+    // ユーザー登録（存在すればエラーだが無視）
+    await axios.post(`${GATEWAY_BASE_URL}/auth/register`, TEST_USER);
+    console.log('✅ Test user registered');
+  } catch (err: any) {
+    if (err.response?.status === 409) {
+      console.log('⚠️ Test user already exists (409)');
+    } else {
+      console.error('❌ Failed to register test user:', err.message);
+    }
+  }
+
+  // トークン取得
+  try {
+    const res = await axios.post(`${GATEWAY_BASE_URL}/auth/login`, TEST_USER);
+    jwtToken = res.data.token;
+    console.log('✅ JWT token obtained');
+  } catch (err: any) {
+    console.error('❌ Failed to get JWT token:', err.message);
+    process.exit(1);
+  }
+}
+
 async function runTest(test: TestCase): Promise<{ name: string; passed: boolean; error?: string }> {
   try {
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      ...(test.headers || {}),
+    };
+
+    const isGatewayRequest = test.baseUrl.includes('api-gateway');
+    const isProtected = test.auth !== false;
+    const hasToken = !!jwtToken;
+
+    console.log(chalk.yellow(`🧐 Header Injection Check for "${test.name}"`));
+    console.log(chalk.gray(`  isGatewayRequest: ${isGatewayRequest}`));
+    console.log(chalk.gray(`  isProtected     : ${isProtected}`));
+    console.log(chalk.gray(`  hasToken        : ${hasToken}`));
+
+    if (isGatewayRequest && isProtected && jwtToken) {
+      headers['Authorization'] = `Bearer ${jwtToken}`;
+      console.log(chalk.gray(`🔐 Added Authorization header for "${test.name}"`));
+    }
+
+    console.log(headers);
+
     const res = await axios({
       method: test.method,
       url: `${test.baseUrl}${test.url}`,
-      headers: {
-        Accept: 'application/json',
-        ...(test.headers || {}),
-      },
+      headers,
       data: test.body,
-      validateStatus: () => true, // allow all status codes
+      validateStatus: () => true,
     });
 
     if (res.status !== test.expect.status) {
@@ -87,6 +134,9 @@ async function runTest(test: TestCase): Promise<{ name: string; passed: boolean;
 }
 
 async function runAllTests() {
+  // トークンは最初に取得して使いまわす
+  await setupTestUser();
+
   const files = getAllYamlFiles(TEST_DIR);
   console.log(chalk.blueBright('📂 Test files found:'), files);
 

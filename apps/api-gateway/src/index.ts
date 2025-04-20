@@ -6,8 +6,16 @@ import emotionsRoutes from './routes/emotions';
 import tagsRoutes from './routes/tags';
 
 // .env を読み込む
-const envFile = process.env.NODE_ENV === 'production' ? 'prd.env' : 'dev.env';
+let envFile = 'dev.env';
+
+if (process.env.NODE_ENV === 'test') {
+  envFile = 'test.env';
+} else if (process.env.NODE_ENV === 'production') {
+  envFile = 'prd.env';
+}
+
 dotenv.config({ path: envFile });
+console.log(`✅ Loaded env file: ${envFile}`);
 
 const app = express();
 const PORT = process.env.PORT || 3000;

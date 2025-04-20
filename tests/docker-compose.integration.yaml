@@ -134,6 +134,24 @@ services:
     networks:
       - runote-net
 
+  api-gateway:
+    build:
+      context: ../apps/api-gateway
+      dockerfile: local.Dockerfile
+    ports:
+      - "8080:3000"
+    env_file:
+      - ../apps/api-gateway/test.env
+    environment:
+      - NODE_ENV=test
+    depends_on:
+      - post-service
+      - auth-service
+      - emotion-service
+      - tag-service
+    networks:
+      - runote-net
+
   # 結合テスト実行用
   integration-test-runner:
     build:
@@ -155,6 +173,7 @@ services:
              wait-port emotion-service:8080 &&
              wait-port tag-service:4000 &&
              wait-port auth-service:8000 &&
+             wait-port api-gateway:3000 &&
              node --loader ts-node/esm index.ts"
 
 volumes:

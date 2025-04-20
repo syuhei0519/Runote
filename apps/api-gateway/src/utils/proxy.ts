@@ -13,6 +13,9 @@ const noAuthRoutes = [
   { method: 'POST', path: '/auth/login' },
   { method: 'POST', path: '/auth/register' },
   { method: 'POST', path: '/auth/test/cleanup' },
+  { method: 'POST', path: '/emotions/test/cleanup' },
+  { method: 'POST', path: '/posts/test/cleanup' },
+  { method: 'POST', path: '/tags/test/cleanup' },
   { method: 'OPTIONS', path: '*' } // CORSプリフライトをスキップ対象に
 ];
 
