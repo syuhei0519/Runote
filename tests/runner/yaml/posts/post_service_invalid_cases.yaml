@@ -6,7 +6,7 @@
   expect:
     status: 404
 
-- name: 投稿登録：title 省略 → 400
+- name: 投稿登録：タイトル 省略 → 400
   baseUrl: http://api-gateway:3000
   method: POST
   url: /posts
@@ -16,7 +16,19 @@
     emotionId: 1
   expect:
     status: 400
-    bodyContains: "title"
+    bodyContains: "タイトルは必須です"
+
+- name: 投稿登録：本文 省略 → 400
+  baseUrl: http://api-gateway:3000
+  method: POST
+  url: /posts
+  auth: true
+  body:
+    emotionId: 1
+    title: "title"
+  expect:
+    status: 400
+    bodyContains: "本文は必須です"
 
 - name: 投稿登録：emotionId に存在しないID → 400 or 422
   baseUrl: http://api-gateway:3000
