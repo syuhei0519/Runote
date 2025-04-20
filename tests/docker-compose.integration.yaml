@@ -168,6 +168,8 @@ services:
       - VERBOSE=true
     networks:
       - runote-net
+    env_file:
+      - test.env
     command: >
       sh -c "wait-port post-service:3000 &&
              wait-port emotion-service:8080 &&
