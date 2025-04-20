@@ -77,16 +77,9 @@ async function runTest(test: TestCase): Promise<{ name: string; passed: boolean;
 
     const isGatewayRequest = test.baseUrl.includes('api-gateway');
     const isProtected = test.auth !== false;
-    const hasToken = !!jwtToken;
-
-    console.log(chalk.yellow(`🧐 Header Injection Check for "${test.name}"`));
-    console.log(chalk.gray(`  isGatewayRequest: ${isGatewayRequest}`));
-    console.log(chalk.gray(`  isProtected     : ${isProtected}`));
-    console.log(chalk.gray(`  hasToken        : ${hasToken}`));
 
     if (isGatewayRequest && isProtected && jwtToken) {
       headers['Authorization'] = `Bearer ${jwtToken}`;
-      console.log(chalk.gray(`🔐 Added Authorization header for "${test.name}"`));
     }
 
     console.log(headers);
