@@ -28,7 +28,7 @@ const TEST_DIR = join(__dirname, 'yaml');
 const GATEWAY_BASE_URL = 'http://api-gateway:3000';
 const TEST_USER = { username: 'testuser', password: 'password123' };
 
-let jwtToken: string | null = null;
+let jwtToken: string = '';
 
 function getAllYamlFiles(dir: string): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -60,8 +60,8 @@ async function setupTestUser(): Promise<void> {
   // トークン取得
   try {
     const res = await axios.post(`${GATEWAY_BASE_URL}/auth/login`, TEST_USER);
-    jwtToken = res.data.token;
-    console.log('✅ JWT token obtained');
+    jwtToken = res.data.access_token;
+    console.log('✅ JWT token obtained:');
   } catch (err: any) {
     console.error('❌ Failed to get JWT token:', err.message);
     process.exit(1);
