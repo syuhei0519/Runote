@@ -69,7 +69,7 @@ services:
     container_name: post-service
     volumes:
       - ./apps/post-service:/app
-      - /app/node_modules  # node_modulesのキャッシュを防ぐ
+      - /app/node_modules
     ports:
       - "4000:3000"
     environment:
@@ -177,6 +177,24 @@ services:
       - postgres_data_tag:/var/lib/postgresql/data
     networks:
       - runote-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: local.Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+    depends_on:
+      - post-service
+      - auth-service
+      - emotion-service
+      - tag-service
 
 volumes:
   mysql_data:

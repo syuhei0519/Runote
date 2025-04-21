@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+      "target": "ESNext",
+      "useDefineForClassFields": true,
+      "types": ["vite/client"],
+      "module": "ESNext",
+      "moduleResolution": "Node",
+      "strict": true,                             // ✅ 厳格モード（すべての型チェックを有効化）
+      "noUnusedLocals": true,                     // ✅ 未使用の変数に警告
+      "noUnusedParameters": true,                 // ✅ 未使用の引数に警告
+      "noImplicitReturns": true,                  // ✅ 関数で return 抜け漏れチェック
+      "noFallthroughCasesInSwitch": true,         // ✅ switch文の抜け防止
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "jsx": "preserve",
+      "lib": ["ESNext", "DOM"],
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["src/*"]
+      }
+    },
+    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+    "references": [{ "path": "./tsconfig.node.json" }]
+}
