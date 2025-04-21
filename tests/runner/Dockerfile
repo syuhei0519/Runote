@@ -13,6 +13,9 @@ RUN npm install -g wait-port
 # YAMLテストケースを明示的にコピー
 COPY yaml/ yaml/
 
+# data ディレクトリの明示的コピーを追加
+COPY data/ data/
+
 # その他のコード・設定ファイルをコピー
 COPY . .
 

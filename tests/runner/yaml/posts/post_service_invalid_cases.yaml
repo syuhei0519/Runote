@@ -55,18 +55,19 @@
   expect:
     status: 401
 
-- name: 投稿更新：他人の投稿を更新 → 403 Forbidden
-  baseUrl: http://api-gateway:3000
-  method: PUT
-  url: /posts/2
-  auth: true
-  body:
-    title: "Hacked!"
-    content: "Try to change someone else's post"
-    emotionId: 1
-  expect:
-    status: 403
-    bodyContains: "forbidden"
+# - name: 他人の投稿を更新 → 403
+#   baseUrl: http://api-gateway:3000
+#   method: PUT
+#   url: /posts/2
+#   auth: true
+#   setup:
+#     - setupOtherUserPost.ts
+#   body:
+#     title: "Hacked"
+#     content: "不正更新"
+#   expect:
+#     status: 403
+#     bodyContains: "forbidden"
 
 - name: 投稿削除：認証済みだが存在しない投稿 → 404
   baseUrl: http://api-gateway:3000

@@ -17,6 +17,7 @@ type TestCase = {
   auth?: boolean;
   headers?: Record<string, string>;
   body?: any;
+  setup?: string[];
   expect: {
     status: number;
     bodyContains?: string;
@@ -46,7 +47,6 @@ function getAllYamlFiles(dir: string): string[] {
 
 async function setupTestUser(): Promise<void> {
   try {
-    // ユーザー登録（存在すればエラーだが無視）
     await axios.post(`${GATEWAY_BASE_URL}/auth/register`, TEST_USER);
     console.log('✅ Test user registered');
   } catch (err: any) {
@@ -57,7 +57,6 @@ async function setupTestUser(): Promise<void> {
     }
   }
 
-  // トークン取得
   try {
     const res = await axios.post(`${GATEWAY_BASE_URL}/auth/login`, TEST_USER);
     jwtToken = res.data.access_token;
@@ -101,6 +100,7 @@ async function runTest(test: TestCase): Promise<{ name: string; passed: boolean;
     }
 
     if (test.expect.bodyContains && !JSON.stringify(res.data).includes(test.expect.bodyContains)) {
+      console.log(chalk.cyan(`📦 Actual response body:`), res.data);
       return {
         name: test.name,
         passed: false,
@@ -118,16 +118,16 @@ async function runTest(test: TestCase): Promise<{ name: string; passed: boolean;
 
     return { name: test.name, passed: true };
   } catch (err: any) {
+    const message = err?.message ?? String(err);
     return {
       name: test.name,
       passed: false,
-      error: err.message || 'Unknown error',
+      error: message,
     };
   }
 }
 
 async function runAllTests() {
-  // トークンは最初に取得して使いまわす
   await setupTestUser();
 
   const files = getAllYamlFiles(TEST_DIR);
@@ -148,17 +148,34 @@ async function runAllTests() {
       for (const testCase of doc) {
         await cleanupServices();
 
+        if (testCase.setup && Array.isArray(testCase.setup)) {
+          for (const setupFile of testCase.setup) {
+            const setupPath = join(__dirname, './data', setupFile);
+            if (fs.existsSync(setupPath)) {
+              const setupFn = await import(setupPath);
+              if (typeof setupFn.default === 'function') {
+                await setupFn.default();
+                console.log(chalk.green(`✅ setup successed ${setupPath}`));
+              }
+            } else {
+              console.warn(chalk.yellow(`⚠️  Setup file not found: ${setupPath}`));
+            }
+          }
+        }
+
         const result = await runTest(testCase);
         results.push(result);
 
         if (result.passed) {
           console.log(chalk.green(`✅ ${testCase.name}`));
         } else {
-          console.log(chalk.red(`❌ ${testCase.name} - ${result.error}`));
+          const errorMessage = typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
+          console.log(chalk.red(`❌ ${testCase.name} - ${errorMessage}`));
         }
       }
     } catch (err: any) {
-      console.error(chalk.red(`❌ Error loading file ${file}: ${err.message || err}`));
+      const message = err?.message ?? String(err);
+      console.error(chalk.red(`❌ Error loading file ${file}: ${message}`));
     }
   }
 
@@ -177,7 +194,8 @@ async function runAllTests() {
 }
 
 runAllTests().catch((err) => {
-  console.error('❌ Test runner crashed:', err.message);
+  const message = err?.message ?? String(err);
+  console.error('❌ Test runner crashed:', message);
   process.exit(1);
 });
 
