@@ -1,0 +1,36 @@
+{
+    // 🔧 保存時に自動で整形 + ESLint自動修正
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": true,
+      "source.fixAll.eslint": true
+    },
+  
+    // 💄 Prettier をデフォルトのフォーマッタに設定（拡張機能: esbenp.prettier-vscode）
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  
+    // 📦 ESLint 適用対象（vue, ts, js）
+    "eslint.validate": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+      "vue"
+    ],
+  
+    // 🚫 除外ディレクトリ（不要な補完/解析を防止）
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.git": true,
+      "**/.DS_Store": true,
+      "**/__pycache__": true
+    },
+  
+    // 🧠 型補完を良くするための設定
+    "typescript.tsdk": "node_modules/typescript/lib",
+  
+    // ⛏️ ターミナルの既定シェル（任意）
+    "terminal.integrated.defaultProfile.linux": "bash"
+}
+  
