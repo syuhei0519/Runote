@@ -15,6 +15,7 @@
         <span v-if="isSubmitting">送信中...</span>
         <span v-else>登録する</span>
       </BaseButton>
+      <BackButton />
     </div>
 
     <Toast :visible="showToast" message="登録が完了しました！" />
@@ -27,6 +28,7 @@ import { useRouter } from "vue-router";
 import { ref } from "vue";
 import BaseButton from "@/components/base/BaseButton.vue";
 import Toast from "@/components/base/Toast.vue";
+import BackButton from "@/components/base/BackButton.vue";
 
 const store = useRegisterUserStore();
 const router = useRouter();

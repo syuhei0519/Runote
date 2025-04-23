@@ -29,6 +29,7 @@
     <BaseButton type="submit" class="mt-6 w-full" :disabled="!isPasswordMatch">
       次へ
     </BaseButton>
+    <BackButton />
   </form>
 </template>
 
@@ -39,6 +40,7 @@ import { useRouter } from "vue-router";
 import BaseInput from "@/components/base/BaseInput.vue";
 import BaseButton from "@/components/base/BaseButton.vue";
 import FormLabel from "@/components/base/FormLabel.vue";
+import BackButton from "@/components/base/BackButton.vue";
 
 const store = useRegisterUserStore();
 const router = useRouter();

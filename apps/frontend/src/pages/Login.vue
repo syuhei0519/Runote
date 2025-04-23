@@ -25,6 +25,7 @@
       </div>
 
       <BaseButton type="submit">ログイン</BaseButton>
+      <BackButton />
     </form>
 
     <!-- ログイン後にトースト表示（仮） -->
@@ -39,6 +40,7 @@ import BaseButton from "@/components/base/BaseButton.vue";
 import BaseCheckbox from "@/components/base/BaseCheckbox.vue";
 import FormLabel from "@/components/base/FormLabel.vue";
 import Toast from "@/components/base/Toast.vue";
+import BackButton from "@/components/base/BackButton.vue";
 
 const username = ref("");
 const password = ref("");
