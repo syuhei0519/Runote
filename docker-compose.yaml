@@ -40,21 +40,21 @@ services:
     env_file:
       - ./apps/auth_service/test.env
     depends_on:
-      - mysql
+      - auth-test-db
     environment:
       - PYTHONDONTWRITEBYTECODE=1
     networks:
       - runote-net
 
-  mysql:
+  auth-test-db:
     image: mysql:8
-    container_name: mysql
+    container_name: auth-test-db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: auth
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: auth_test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
     ports: 
      - "3306:3306"
     volumes:
