@@ -180,14 +180,14 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./apps/frontend
       dockerfile: local.Dockerfile
     ports:
       - "5173:5173"
     environment:
       - NODE_ENV=development
     volumes:
-      - ./frontend:/app
+      - ./apps/frontend:/app
       - /app/node_modules
     command: npm run dev
     depends_on:

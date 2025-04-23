@@ -2,8 +2,8 @@
     // 🔧 保存時に自動で整形 + ESLint自動修正
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.fixAll": true,
-      "source.fixAll.eslint": true
+      "source.fixAll": "explicit",
+      "source.fixAll.eslint": "explicit"
     },
   
     // 💄 Prettier をデフォルトのフォーマッタに設定（拡張機能: esbenp.prettier-vscode）
@@ -31,6 +31,7 @@
     "typescript.tsdk": "node_modules/typescript/lib",
   
     // ⛏️ ターミナルの既定シェル（任意）
-    "terminal.integrated.defaultProfile.linux": "bash"
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "vue3snippets.enable-compile-vue-file-on-did-save-code": true
 }
   

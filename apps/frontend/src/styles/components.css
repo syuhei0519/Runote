@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🔵 共通入力フィールド */
+.input {
+  @apply border border-gray-300 dark:border-gray-600 rounded px-4 py-2 bg-white dark:bg-gray-900 text-black dark:text-white
+         focus:outline-none focus:ring-2 focus:ring-primary w-full;
+}
+
+/* 🟢 ボタンスタイル（基本） */
+.btn {
+  @apply bg-primary text-white font-medium px-4 py-2 rounded transition hover:bg-opacity-90;
+}
+
+/* 🟠 サブボタン or キャンセル */
+.btn-secondary {
+  @apply bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-white rounded px-4 py-2 hover:bg-gray-400;
+}
