@@ -74,6 +74,7 @@ export async function proxyRequest(req: Request, res: Response, targetUrl: strin
       url: targetUrl,
       headers: {
         ...req.headers,
+        'Authorization': req.headers.authorization,
         'X-User-Id': (decoded as any).sub,
       },
       data: req.body
