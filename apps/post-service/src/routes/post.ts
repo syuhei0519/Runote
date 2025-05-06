@@ -34,12 +34,29 @@ router.post('/', async (req: Request, res: Response) => {
 
   const parsed = PostSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.format() });
+    const formatted = parsed.error.format();
+    const messages: string[] = [];
+
+    // title のエラー
+    if (formatted.title?._errors?.length) {
+    messages.push(...formatted.title._errors);
+    }
+
+    // content のエラー
+    if (formatted.content?._errors?.length) {
+      messages.push(...formatted.content._errors);
+    }
+    
+    return res.status(400).json({ error: messages });
   }
 
   const { title, content, tagIds = [], emotion } = parsed.data as PostInput;
 
   try {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(401).json({ error: 'User not found or unauthorized' });
+    }
     // 1. Postを作成
     const newPost = await prisma.post.create({
       data: {
@@ -72,7 +89,10 @@ router.post('/', async (req: Request, res: Response) => {
     res.status(201).json(newPost);
   } catch (error) {
     console.error('投稿作成失敗:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ 
+      error: 'Internal Server Error',
+      detail: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 

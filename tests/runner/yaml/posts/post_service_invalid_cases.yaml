@@ -12,6 +12,7 @@
   url: /posts
   auth: true
   body:
+    title: ""
     content: "Content only"
     emotionId: 1
   expect:
@@ -25,6 +26,7 @@
   auth: true
   body:
     emotionId: 1
+    content: ""
     title: "title"
   expect:
     status: 400

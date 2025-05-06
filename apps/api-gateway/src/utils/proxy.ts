@@ -16,19 +16,19 @@ const noAuthRoutes = [
   { method: 'POST', path: '/emotions/test/cleanup' },
   { method: 'POST', path: '/posts/test/cleanup' },
   { method: 'POST', path: '/tags/test/cleanup' },
-  { method: 'OPTIONS', path: '*' } // CORSプリフライトをスキップ対象に
+  { method: 'OPTIONS', path: '*' }, // CORSプリフライト用
 ];
 
 function shouldSkipAuth(req: Request): boolean {
   return noAuthRoutes.some(route => {
     const methodMatches = req.method === route.method;
-    const pathMatches =
-      route.path === '*' || req.originalUrl.startsWith(route.path);
+    const pathMatches = route.path === '*' || req.originalUrl.startsWith(route.path);
     return methodMatches && pathMatches;
   });
 }
 
 export async function proxyRequest(req: Request, res: Response, targetUrl: string) {
+  // 🟢 認証スキップ対象
   if (shouldSkipAuth(req)) {
     try {
       const result = await axios({
@@ -42,14 +42,14 @@ export async function proxyRequest(req: Request, res: Response, targetUrl: strin
       });
       return res.status(result.status).json(result.data);
     } catch (err: any) {
-      return res.status(err.response?.status || 500).json({
-        error: 'Upstream service error',
-        detail: err.response?.data || err.message,
-      });
+      if (err.response) {
+        return res.status(err.response.status).json(err.response.data);
+      }
+      return res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
   }
 
-  // 🔐 認証チェック（スキップ対象以外）
+  // 🔐 認証チェック
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Authorization token missing or malformed' });
@@ -67,7 +67,7 @@ export async function proxyRequest(req: Request, res: Response, targetUrl: strin
     return res.status(403).json({ error: 'Invalid token', reason: err.message });
   }
 
-  // 🔁 サービスに中継
+  // 🔁 サービスに中継（X-User-Id ヘッダー追加）
   try {
     const result = await axios({
       method: req.method as any,
@@ -77,15 +77,15 @@ export async function proxyRequest(req: Request, res: Response, targetUrl: strin
         'Authorization': req.headers.authorization,
         'X-User-Id': (decoded as any).sub,
       },
-      data: req.body
+      data: req.body,
     });
 
-    res.status(result.status).json(result.data);
+    return res.status(result.status).json(result.data);
   } catch (err: any) {
     console.error(`[Proxy Error] ${err.message}`);
-    res.status(err.response?.status || 500).json({
-      error: 'Upstream service error',
-      detail: err.message,
-    });
+    if (err.response) {
+      return res.status(err.response.status).json(err.response.data);
+    }
+    return res.status(500).json({ error: 'Internal Server Error', message: err.message });
   }
 }
